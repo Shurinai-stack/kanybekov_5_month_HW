@@ -53,28 +53,21 @@ def detail_product_view(request, id):
     )
 
 @api_view(['GET'])
-def review_list_view(request):
-    reviews = Review.objects.all()
-    list_of_review = ReviewListSerializer(instance=reviews, many=True).data
-    return Response(
-        data=list_of_review,
-        status=status.HTTP_200_OK,
-    )
+def products_with_reviews(request):
+    products = Product.objects.all()
 
-@api_view(['GET'])
-def detail_review_view(request, id):
-    try:
-        review = Review.objects.get(id=id)
-    except Review.DoesNotExist:
-        return Response(
-            status=status.HTTP_404_NOT_FOUND,
-            data={'error': 'Review not found'},
-        )
-    item = DetailReviewSerializers(instance=review, many=False).data
-    return Response(
-        data=item,
-        status=status.HTTP_200_OK,
-    )
+    result = []
+    for product in products:
+        reviews = Review.objects.filter(product=product)
 
+        if reviews.exists():
+            total =sum([rev.stars for rev in reviews])
+            rating = total / reviews.count()
+        else:
+            rating = None
 
+        data = ProductReviewSerializer(product).data
+        data['rating'] = rating
 
+        result.append(data)
+    return Response(result, status=status.HTTP_200_OK)

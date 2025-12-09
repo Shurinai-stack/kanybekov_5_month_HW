@@ -4,7 +4,8 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.name}'
+        return self.name
+
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
@@ -15,9 +16,14 @@ class Product(models.Model):
     def __str__(self):
         return f'{self.title} - {self.category}'
 
+
+STARS = [(i, '*' * i) for i in range(1, 11)]
+
+
 class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True, related_name="reviews")
     text = models.TextField(null=True, blank=True)
-    product = models.ForeignKey(Product, null=True, blank=True, on_delete=models.CASCADE)
+    stars = models.IntegerField(choices=STARS, default=1)
 
     def __str__(self):
-        return f'{self.text} - {self.product}'
+        return f'{self.stars} - {self.text}'
