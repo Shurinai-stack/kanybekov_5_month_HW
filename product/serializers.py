@@ -44,3 +44,18 @@ class ProductReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
+
+class ProductValidateSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    price = serializers.IntegerField()
+    category_id = serializers.IntegerField()
+
+class CategoryValidateSerializer(serializers.Serializer):
+    name = serializers.CharField()
+
+class ReviewValidateSerializer(serializers.Serializer):
+    product = serializers.IntegerField()
+    text = serializers.CharField()
+    stars = serializers.IntegerField()
+    
