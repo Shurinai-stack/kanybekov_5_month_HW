@@ -1,5 +1,5 @@
 import random
-from rest_framework.decorators import APIView, api_view
+from rest_framework.decorators import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
@@ -20,58 +20,57 @@ class AuthAPIView(APIView):
         user = authenticate(username=username, password=password)
 
         if user is not None:
-            token, created = Token.objects.get_or_create(user=user)
+            token = Token.objects.get_or_create(user=user)
             return Response({'key': token.key})
         
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-@api_view(['POST'])
-def registration_api_view(request):
-    serializer = UserRegisterSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+class RegistrationAPIView(APIView):
+    def post(self,request):
+        serializer = UserRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-    username = serializer.validated_data.get('username')
-    password = serializer.validated_data.get('password')
+        username = serializer.validated_data.get('username')
+        password = serializer.validated_data.get('password')
 
-    user = User.objects.create_user(
-        username=username,
-        password=password,
-        is_active=False
-    )
-
-    code = ''.join([str(random.randint(0,9)) for _ in range(6)])
-
-    ConfirmCode.objects.create(
-        user=user,
-        code=code
-    )
-
-    return Response(data={'user_id': user.id},
-                    status=status.HTTP_201_CREATED)
-
-@api_view(['POST'])
-def confirm_user_api_view(request):
-    serializer = UserConfirmSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-
-    code = serializer.validated_data.get('code')
-
-    try:
-        confirm = ConfirmCode.objects.get(code=code)
-    except ConfirmCode.DoesNotExist:
-        return Response(
-            {'error': 'invalid confirm code'},
-            status=status.HTTP_400_BAD_REQUEST
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            is_active=False
         )
-    
-    user = confirm.user
-    user.is_active = True
-    user.save()
 
-    confirm.delete()
+        code = ''.join([str(random.randint(0,9)) for _ in range(6)])
 
-    return Response(
-        {'message': 'User confirm OK'},
-        status=status.HTTP_200_OK
-    )
+        ConfirmCode.objects.create(
+            user=user,
+            code=code
+        )
 
+        return Response(data={'user_id': user.id},
+                        status=status.HTTP_201_CREATED)
+
+class ConfirmUserAPIView(APIView):
+    def post(self, request):
+        serializer = UserConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        code = serializer.validated_data.get('code')
+
+        try:
+            confirm = ConfirmCode.objects.get(code=code)
+        except ConfirmCode.DoesNotExist:
+            return Response(
+                {'error': 'invalid confirm code'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = confirm.user
+        user.is_active = True
+        user.save()
+
+        confirm.delete()
+
+        return Response(
+            {'message': 'User confirm OK'},
+            status=status.HTTP_200_OK
+        )
