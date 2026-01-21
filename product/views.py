@@ -4,6 +4,8 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound
+from users.permissions import IsModerator
+
 
 from .models import Category, Product, Review
 from .serializers import *
@@ -21,6 +23,8 @@ class CategoryViewSet(ModelViewSet):
 
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
+    permission_classes = [IsModerator]
+
     def get_serializer_class(self):
         if self.action == 'list':
             return ProductListSerializer
