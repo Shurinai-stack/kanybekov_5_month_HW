@@ -1,13 +1,15 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class IsModerator(BasePermission):
-    """
-    Доступ только для сотрудников (модераторов)
-    """
     def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.is_staff
-        )
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        if not request.user.is_staff:
+            return False
+
+        if request.method == 'POST':
+            return False
+
+        return True
